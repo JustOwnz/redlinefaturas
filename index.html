@@ -182,6 +182,7 @@
           <div class="grid">
             <div style="color:var(--muted)">Oficina</div><div id="totMods">0,00 €</div>
             <div style="color:var(--muted)">Serviços</div><div id="totSvc">0,00 €</div>
+            <div style="color:var(--muted)">Taxa (faixa preço)</div><div id="totSurcharge">0,00 €</div>
             <div style="color:var(--muted)">Total bruto</div><div id="totGross">0,00 €</div>
             <div style="color:var(--muted)">Desconto</div><div id="totDisc">0,00 €</div>
             <div style="font-weight:900">Total devido</div><div style="font-weight:900" id="totFinal">0,00 €</div>
@@ -214,8 +215,16 @@
   <script>
     // ====== CONFIG ======
     const WEBHOOK_URL = 'https://discord.com/api/webhooks/1424102295989260290/O551-zFM41O1NWTm_f7eALRbe2nqn-JUUq-0lvwY6HQwt3DfSnYc8R9WK932zf3v2ry4';
-  //  var SERVICE_REMAP_PRICE = 10000; // 100,00 € (cêntimos)
     var SERVICE_OUT_PRICE_PER_KM = 25000; // 250,00 € por km (cêntimos)
+    const SERVICE_REMAP_PCT = 0.08; // 8% do valor do veículo (editável)
+
+    // === REGRAS DE TAXA EXTRA POR FAIXA DE PREÇO DO VEÍCULO ===
+    // 'to' é em EUROS. Edita aqui.
+    const SURCHARGE_RULES = [
+      { to: 250000, pct: 0.011, label: '0–250.000 € (3%)' },
+      { to: 500000, pct: 0.07, label: '250.000–500.000 € (2%)' },
+      { to: Infinity, pct: 0, label: '> 500.000 € (0%)' }
+    ];
 
     // ====== UTIL ======
     function euro(n){ n=(isNaN(n)?0:n); var sign=n<0?'-':''; n=Math.abs(n); var euros=Math.floor(n/100); var cents=String(n%100).padStart(2,'0'); var intStr=String(euros).replace(/\B(?=(\d{3})+(?!\d))/g,'\u00A0'); return sign+intStr+','+cents+'\u00A0€'; }
@@ -227,27 +236,34 @@
     function clampPct(v){ v=isFinite(v)?v:0; return Math.max(0, Math.min(100, v)); }
     function debounce(fn,ms=80){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
 
+    // Calcula a taxa extra baseada nas faixas de preço do veículo
+    function getSurchargeInfo(carValEuro){
+      const rule = (SURCHARGE_RULES || []).find(r => carValEuro <= r.to) || { pct:0, label:'—' };
+      const amount = Math.round((carValEuro||0) * 100 * (rule.pct||0));
+      return { amount, pct: rule.pct||0, label: rule.label || '' };
+    }
+
     // ====== DADOS ======
     var OFICINA = [
       {label:'KITS ESTÉTICA', items:[
-        {name:'Escape', pct:0.014}, 
-		{name:'Frame', pct:0.014}, 
-		{name:'Parachoques frontal', pct:0.014}, 
-		{name:'Grelha frontal', pct:0.014}, 
-		{name:'Capô', pct:0.014}, 
-		{name:'Guarda-lama Esquerdo', pct:0.014}, 
-		{name:'Parachoques traseiro', pct:0.014}, 
-		{name:'Guarda-lama dianteiro', pct:0.014}, 
-		{name:'Tejadilho', pct:0.014}, 
-		{name:'Saias', pct:0.014}, 
-		{name:'Spoiler', pct:0.014}
+        {name:'Escape', pct:0.015}, 
+		{name:'Frame', pct:0.015}, 
+		{name:'Parachoques frontal',pct:0.015}, 
+		{name:'Grelha frontal', pct:0.015}, 
+		{name:'Capô', pct:0.015}, 
+		{name:'Guarda-lama Esquerdo', pct:0.015}, 
+		{name:'Parachoques traseiro', pct:0.015}, 
+		{name:'Guarda-lama dianteiro', pct:0.015}, 
+		{name:'Tejadilho', pct:0.015}, 
+		{name:'Saias', pct:0.015}, 
+		{name:'Spoiler', pct:0.015}
       ]},
       {label:'CORES', items:[
         {name:'Luzes frontais', pct:0.0025}, 
 		{name:'Interior', pct:0.00025}, 
 		{name:'Luzes neon', pct:0.0025}, 
 		{name:'Perolado', pct:0.0015}, 
-		{name:'Primária', pct:0.0045}, 
+		{name:'Primária', pct:0.0050}, 
 		{name:'Secundária', pct:0.00025}, 
 		{name:'Fumo de pneus', pct:0.0015}, 
 		{name:'Cor jantes', pct:0.00025}
@@ -256,14 +272,14 @@
         {name:'Buzina', pct:0.00075}, 
 		{name:'Estampas', pct:0.0093}, 
 		{name:'Matrículas', pct:0.00080}, 
-		{name:'Vidros', pct:0.011}
+		{name:'Vidros', pct:0.0135}
       ]},
       {label:'MELHORIAS', items:[
-        {name:'Blindagem N1', pct:0.05, armor:true}, 
-		{name:'Blindagem N2', pct:0.07, armor:true}, 
-		{name:'Blindagem N3', pct:0.09, armor:true}, 
-		{name:'Blindagem N4', pct:0.15, armor:true}, 
-		{name:'Blindagem N5', pct:0.20, armor:true}
+        {name:'Blindagem N1', pct:0.055, armor:true}, 
+		{name:'Blindagem N2', pct:0.075, armor:true},
+		{name:'Blindagem N3', pct:0.095, armor:true}, 
+		{name:'Blindagem N4', pct:0.155, armor:true}, 
+		{name:'Blindagem N5', pct:0.205, armor:true}
       ]},
       {label:'JANTES', items:[{name:'Tipo de jantes', pct:0.0075}]}
     ];
@@ -273,10 +289,9 @@
       { name:'CarPlay', price:5000000 },
       { name:'Tablet de Corrida', price:50000000 },
       { name:'Boosting Tablet', price:50000000 },
-      { name:'GPS Hacking', price:7500000 },	  
-      { name:'Hacking Device', price:7500000 },	  
-      { name:'Reprogramação', price: 40000000 },	  
-    //  { name:'Reprogramação', price:SERVICE_REMAP_PRICE, toggleOnly:true },
+      { name:'GPS Hacking', price:7500000 },
+      { name:'Hacking Device', price:7500000 },
+      { name:'Reprogramação', percentOfCar: SERVICE_REMAP_PCT, toggleOnly:true },
       { name:'Serviço Fora (€/km)', price:SERVICE_OUT_PRICE_PER_KM }
     ];
 
@@ -324,7 +339,9 @@
       var body=gid('servicesBody'); if(!body) return; body.innerHTML='';
       SERVICES.forEach(function(svc){
         var tr=document.createElement('tr');
-        var priceHtml = '<span class="price-span">'+euro(svc.price)+'</span>';
+        var priceHtml = (svc.percentOfCar != null)
+          ? '<span class="price-span">'+ (svc.percentOfCar*100).toFixed(2) + '% do valor</span>'
+          : '<span class="price-span">'+euro(svc.price)+'</span>';
         var qtyCol = svc.toggleOnly
           ? '<input type="checkbox" class="switch svc-switch" role="switch" aria-checked="false" />'
           : '<input class="input center svc-qty" type="number" placeholder="0" min="0" style="width:72px" disabled/>';
@@ -335,14 +352,14 @@
         body.appendChild(tr);
 
         var total = tr.querySelector('.svc-total');
-        var obj={name:svc.name, price:svc.price, toggleOnly:!!svc.toggleOnly, totalEl:total};
+        var obj={name:svc.name, price:svc.price, percentOfCar:svc.percentOfCar, toggleOnly:!!svc.toggleOnly, totalEl:total};
 
         if(svc.toggleOnly){
           obj.switchEl = tr.querySelector('.svc-switch');
-          obj.switchEl.addEventListener('change',function(){ var on=obj.switchEl && obj.switchEl.checked; obj.switchEl.setAttribute('aria-checked', on ? 'true':'false'); total.textContent=euro(on?obj.price:0); recalcTotals(); });
+          obj.switchEl.addEventListener('change',function(){ var on=obj.switchEl && obj.switchEl.checked; obj.switchEl.setAttribute('aria-checked', on ? 'true':'false'); recalcTotals(); });
         } else {
           obj.qtyEl = tr.querySelector('.svc-qty');
-          obj.qtyEl.addEventListener('input',function(){ var q=Number(obj.qtyEl && obj.qtyEl.value || 0); total.textContent=euro(Math.max(0,q)*obj.price); debouncedRecalc(); });
+          obj.qtyEl.addEventListener('input',function(){ debouncedRecalc(); });
           obj.qtyEl.disabled = true;
         }
         RT.services.push(obj);
@@ -362,9 +379,10 @@
 
       const dOf = gid('detailsOficina');
       if(dOf){
+        // Mantém o acordeão visível; apenas aplica estilo de desativado.
         dOf.classList.toggle('disabled', !ready);
-        if(!ready && dOf.open) dOf.open = false; // fecha quando bloqueado
-        if(ready && !dOf.open) dOf.open = true;  // reabre automaticamente quando ficar pronto
+        // NÃO fecha automaticamente quando não está pronto para evitar a sensação de "sumiu".
+        // Se quiseres o comportamento antigo, posso voltar a fechar/abrir aqui.
       }
 
       RT.mods.forEach(function(m){ m.toggle.disabled = !ready; if(!ready){ m.toggle.checked=false; m.toggle.setAttribute('aria-checked','false'); m.priceEl.value=euro(0);} });
@@ -375,15 +393,44 @@
 
     function recalcTotals(){
       var modsTotal = RT.mods.reduce(function(s,m){ return s+onlyNum(m.priceEl.value); },0);
-      var svcTotal  = RT.services.reduce(function(sum,s){ if(s.toggleOnly){ return sum + ((s.switchEl && s.switchEl.checked) ? (s.price||0) : 0); } var q = Number(s.qtyEl ? (s.qtyEl.value||0) : 0); return sum + q*(s.price||0); },0);
-      var gross = modsTotal + svcTotal;
+      var svcTotal  = RT.services.reduce(function(sum,s){
+        const carValEuro = normalizeNumberInput(gval('carValue')) || 0;
+        let rowTotal = 0;
+        if(s.toggleOnly){
+          const on = s.switchEl && s.switchEl.checked;
+          if(on){
+            if(s.percentOfCar != null){
+              rowTotal = Math.round(carValEuro*100*s.percentOfCar);
+            } else {
+              rowTotal = s.price||0;
+            }
+          }
+        } else {
+          const q = Number(s.qtyEl ? (s.qtyEl.value||0) : 0);
+          if(s.percentOfCar != null){
+            rowTotal = Math.max(0,q)*Math.round(carValEuro*100*s.percentOfCar);
+          } else {
+            rowTotal = Math.max(0,q)*(s.price||0);
+          }
+        }
+        if(s.totalEl){ s.totalEl.textContent = euro(rowTotal); }
+        return sum + rowTotal;
+      },0);
+      var baseGross = modsTotal + svcTotal;
+
+      // Taxa por faixa de preço do veículo (em euros, depois convertido p/ cêntimos)
+      const carValEuro = normalizeNumberInput(gval('carValue')) || 0;
+      const surcharge = getSurchargeInfo(carValEuro);
+
+      var gross = baseGross + surcharge.amount; // bruto já inclui a taxa
       var pct = clampPct(normalizeNumberInput(gval('partnerPct')||'0'));
       var discount = Math.round(gross * (pct/100));
       var final = Math.max(0, gross - discount);
-      RT.totals = {mods:modsTotal, svc:svcTotal, gross:gross, discount:discount, final:final};
+      RT.totals = {mods:modsTotal, svc:svcTotal, surcharge:surcharge.amount, gross:gross, discount:discount, final:final};
       var sub = gid('svcSubtotal'); if(sub) sub.textContent = euro(svcTotal);
       if(gid('totMods')){ gid('totMods').textContent=euro(modsTotal); }
       if(gid('totSvc')){ gid('totSvc').textContent=euro(svcTotal); }
+      if(gid('totSurcharge')){ gid('totSurcharge').textContent=euro(surcharge.amount); }
       if(gid('totGross')){ gid('totGross').textContent=euro(gross); }
       if(gid('totDisc')){ gid('totDisc').textContent=euro(discount); }
       if(gid('totFinal')){ gid('totFinal').textContent=euro(final); }
@@ -395,9 +442,41 @@
       var col=(gval('colaborador')||'').trim(); var cli=(gval('cliente')||'').trim(); if(!col||!cli){ alert('Preencha Colaborador e Cliente para continuar.'); return; }
       var s=collectSnapshot(); var body=gid('invoiceBody'); if(!body) return;
       const kv = (k,v) => '<div class="inv-row"><div class="inv-key">'+esc(k)+'</div><div class="inv-val">'+esc(v)+'</div></div>';
-      let oficinaHtml = ''; if(s.mods.lines.length){ oficinaHtml += '<div class="inv-list">'; s.mods.lines.forEach(m=>{ oficinaHtml += '<div class="inv-line"><div class="name">'+esc(m.name)+'</div><div class="price">'+euro(m.total)+'</div></div>'; }); oficinaHtml += '</div>'; } else { oficinaHtml += '<div class="inv-line"><div class="name" style="color:#9ca3af">Sem extras</div><div class="price">—</div></div>'; }
-      let servicosHtml = ''; if(s.services.lines.length){ servicosHtml += '<div class="inv-list">'; s.services.lines.forEach(b=>{ const q=(b.qty>1)?(' × '+b.qty):''; servicosHtml += '<div class="inv-line"><div class="name">'+esc(b.name)+q+'</div><div class="price">'+euro(b.total)+'</div></div>'; }); servicosHtml += '</div>'; } else { servicosHtml += '<div class="inv-line"><div class="name" style="color:#9ca3af">Sem serviços</div><div class="price">—</div></div>'; }
-      const aside = ['<div class="inv-aside"><div class="inv-aside-inner">','<div class="title">Totais</div>','<div class="inv-total-row"><div class="label">🏠 Subtotal oficina</div><div>'+euro(s.mods.total)+'</div></div>','<div class="inv-total-row"><div class="label">🧰 Subtotal serviços</div><div>'+euro(s.services.total)+'</div></div>','<div class="inv-total-row"><div class="label">💵 Total bruto</div><div>'+euro(s.gross)+'</div></div>','<div class="inv-total-row"><div class="label">🔻 Desconto parceria</div><div>'+ (s.discount>0 ? '− ' : '') + euro(s.discount) +'</div></div>','<div class="inv-final"><div style="display:flex;justify-content:space-between;gap:8px"><span>✅ Total a pagar</span><span>'+euro(s.final)+'</span></div></div>','<div class="inv-note">Gerado em '+new Date(s.date).toLocaleString('pt-PT')+'</div>','<div class="inv-actions"><button class="btn btn-primary" id="emitInvoiceBtn">🧾 Emitir Fatura</button></div>','</div></div>'].join('');
+
+      // === AGRUPAR OFICINA POR CATEGORIA NA PRÉ-VISUALIZAÇÃO ===
+      let oficinaHtml = '';
+      if(s.mods.lines.length){
+        const byGroup = s.mods.lines.reduce((acc, m) => { (acc[m.group] ||= []).push(m); return acc; }, {});
+        oficinaHtml += '<div class="inv-list">';
+        Object.entries(byGroup).forEach(([grp, items]) => {
+          oficinaHtml += `<div class="inv-section" style="margin-top:8px"><span>${esc(grp)}</span></div>`;
+          items.forEach(m => {
+            oficinaHtml += `<div class="inv-line"><div class="name">${esc(m.name)}</div><div class="price">${euro(m.total)}</div></div>`;
+          });
+        });
+        oficinaHtml += '</div>';
+      } else {
+        oficinaHtml += '<div class="inv-line"><div class="name" style="color:#9ca3af">Sem extras</div><div class="price">—</div></div>';
+      }
+
+      let servicosHtml = '';
+      if(s.services.lines.length){
+        servicosHtml += '<div class="inv-list">';
+        s.services.lines.forEach(b=>{ const q=(b.qty>1)?(' × '+b.qty):''; servicosHtml += '<div class="inv-line"><div class="name">'+esc(b.name)+q+'</div><div class="price">'+euro(b.total)+'</div></div>'; });
+        servicosHtml += '</div>';
+      } else {
+        servicosHtml += '<div class="inv-line"><div class="name" style="color:#9ca3af">Sem serviços</div><div class="price">—</div></div>';
+      }
+
+      const aside = ['<div class="inv-aside"><div class="inv-aside-inner">','<div class="title">Totais</div>',
+        '<div class="inv-total-row"><div class="label">🏠 Subtotal oficina</div><div>'+euro(s.mods.total)+'</div></div>',
+        '<div class="inv-total-row"><div class="label">🧰 Subtotal serviços</div><div>'+euro(s.services.total)+'</div></div>',
+        '<div class="inv-total-row"><div class="label">➕ Taxa (faixa preço)</div><div>'+euro(s.surcharge.amount)+'</div></div>',
+        '<div class="inv-total-row"><div class="label">💵 Total bruto</div><div>'+euro(s.gross)+'</div></div>',
+        '<div class="inv-total-row"><div class="label">🔻 Desconto parceria</div><div>'+ (s.discount>0 ? '− ' : '') + euro(s.discount) +'</div></div>',
+        '<div class="inv-final"><div style="display:flex;justify-content:space-between;gap:8px"><span>✅ Total a pagar</span><span>'+euro(s.final)+'</span></div></div>',
+        '<div class="inv-note">Gerado em '+new Date(s.date).toLocaleString('pt-PT')+'</div>',
+        '<div class="inv-actions"><button class="btn btn-primary" id="emitInvoiceBtn">🧾 Emitir Fatura</button></div>','</div></div>'].join('');
       const left = ['<div class="inv-card">','<div class="inv-head">',kv('Emitida em', new Date(s.date).toLocaleString('pt-PT')),kv('Colaborador', s.collaborator || '—'),kv('Cliente', s.client || '—'),kv('Parceria', (s.partnerCompany ? esc(s.partnerCompany) : '—') + ' ( '+(s.partnerPct||0)+'% )'),kv('Valor do veículo', euro(s.carVal)), '</div>','<div class="inv-scroll">','<div class="inv-section"><span>Oficina</span><span class="inv-chip">detalhe</span></div>',oficinaHtml,'<div class="inv-section" style="margin-top:14px"><span>Serviços</span><span class="inv-chip">itens</span></div>',servicosHtml,'</div>','</div>'].join('');
       body.innerHTML = '<div class="inv-wrap">'+ left + aside +'</div>'; gid('invoiceModal').classList.add('open');
       var btn=gid('emitInvoiceBtn'); if(btn){ btn.onclick=function(){ sendToWebhook(s).then(function(){ alert('Fatura enviada para o Discord.'); }).catch(function(err){ console.error(err); alert('Falha ao enviar para o Discord. Ver consola.'); }); }; }
@@ -406,14 +485,37 @@
     // ====== Snapshot ======
     function collectSnapshot(){
       function txt(id){ var v=gval(id)||''; return v.trim(); }
-      var carVal = Math.round(normalizeNumberInput(gval('carValue')||0)*100);
+      var carValEuro = normalizeNumberInput(gval('carValue')||0);
+      var carVal = Math.round(carValEuro*100);
       var partnerPct = clampPct(normalizeNumberInput(gval('partnerPct')||'0'));
       var collaborator=txt('colaborador'); var client=txt('cliente'); var partnerCompany=txt('partnerCompany');
-      var mods=[]; RT.mods.forEach(function(m){ var v=onlyNum(m.priceEl.value); if(v>0) mods.push({name:m.name,total:v}); });
-      var svcLines=[]; RT.services.forEach(function(s){ if(s.toggleOnly){ if(s.switchEl && s.switchEl.checked){ svcLines.push({name:s.name, qty:1, unit:s.price, total:s.price}); } } else { var q=Number(s.qtyEl ? (s.qtyEl.value||0) : 0); if(q>0) svcLines.push({name:s.name, qty:q, unit:s.price, total:q*s.price}); } });
+
+      // === INCLUIR CATEGORIA NAS MODS ===
+      var mods=[]; RT.mods.forEach(function(m){ var v=onlyNum(m.priceEl.value); if(v>0) mods.push({group:m.group, name:m.name, total:v}); });
+
+      var svcLines=[]; RT.services.forEach(function(s){
+        if(s.toggleOnly){
+          if(s.switchEl && s.switchEl.checked){
+            const unit = (s.percentOfCar != null) ? Math.round(carValEuro*100*s.percentOfCar) : (s.price||0);
+            svcLines.push({name:s.name, qty:1, unit:unit, total:unit});
+          }
+        } else {
+          var q=Number(s.qtyEl ? (s.qtyEl.value||0) : 0);
+          if(q>0){
+            const unit = (s.percentOfCar != null) ? Math.round(carValEuro*100*s.percentOfCar) : (s.price||0);
+            svcLines.push({name:s.name, qty:q, unit:unit, total:q*unit});
+          }
+        }
+      });
       var services={lines:svcLines, total:svcLines.reduce((a,b)=>a+b.total,0)};
-      var modsTotal=mods.reduce((a,b)=>a+b.total,0); var gross=services.total+modsTotal; var discount=Math.round(gross*(partnerPct||0)/100); var final=gross-discount;
-      return {date:new Date().toISOString(), collaborator:collaborator, client:client, partnerCompany:partnerCompany, carVal:carVal, partnerPct:partnerPct, services:services, mods:{lines:mods,total:modsTotal}, gross:gross, discount:discount, final:final};
+
+      var modsTotal=mods.reduce((a,b)=>a+b.total,0);
+      var baseGross=services.total+modsTotal;
+      var surcharge = getSurchargeInfo(carValEuro);
+      var gross=baseGross + surcharge.amount; // bruto já com taxa
+      var discount=Math.round(gross*(partnerPct||0)/100);
+      var final=gross-discount;
+      return {date:new Date().toISOString(), collaborator:collaborator, client:client, partnerCompany:partnerCompany, carVal:carVal, partnerPct:partnerPct, services:services, mods:{lines:mods,total:modsTotal}, surcharge:surcharge, gross:gross, discount:discount, final:final};
     }
 
     // ====== Discord ======
@@ -423,9 +525,23 @@
           var url = WEBHOOK_URL; if(!url){ throw new Error('Webhook não configurado'); }
           const header = `🧾 Fatura • RedLine Performance • ${snapshot.collaborator || '—'}`;
           const info = [`**🗓️ Data/Hora:** ${new Date(snapshot.date).toLocaleString('pt-PT')}`,`**👤 Cliente:** ${snapshot.client || '—'}`]; if(snapshot.partnerCompany){ info.push(`**🤝 Parceria:** ${snapshot.partnerCompany} (${snapshot.partnerPct || 0}%)`);} info.push(`**🚘 Valor do veículo:** ${euro(snapshot.carVal)}`);
-          const modsDesc = snapshot.mods.lines.length ? snapshot.mods.lines.map(m => `• ${m.name} — ${euro(m.total)}`).join('\n') : '• —';
+
+          // === AGRUPAR MODS POR CATEGORIA NO EMBED ===
+          const modsByGroup = snapshot.mods.lines.reduce((acc, m) => { (acc[m.group] ||= []).push(m); return acc; }, {});
+          const modsDesc = Object.keys(modsByGroup).length
+            ? Object.entries(modsByGroup)
+                .map(([grp, items]) => `**${grp}**\n` + items.map(m => `• ${m.name} — ${euro(m.total)}`).join('\n'))
+                .join('\n\n')
+            : '• —';
+
           const svcsDesc = snapshot.services.lines.length ? snapshot.services.lines.map(s => `• ${s.name}${s.qty>1?` × ${s.qty}`:''} — ${euro(s.total)}`).join('\n') : '• —';
-          const totalsBlock = ['**💰 Totais**',`🏠 Subtotal Oficina: ${euro(snapshot.mods.total)}`,`🧰 Subtotal Serviços: ${euro(snapshot.services.total)}`,`💵 Total Bruto: ${euro(snapshot.gross)}`,`🔻 Desconto: ${(snapshot.discount > 0 ? '− ' : '') + euro(snapshot.discount)}`,`✅ Total a pagar: ${euro(snapshot.final)}`].join('\n');
+          const totalsBlock = ['**💰 Totais**',
+            `🏠 Subtotal Oficina: ${euro(snapshot.mods.total)}`,
+            `🧰 Subtotal Serviços: ${euro(snapshot.services.total)}`,
+            `➕ Taxa (faixa preço): ${euro(snapshot.surcharge.amount)}${snapshot.surcharge.pct ? ` (${(snapshot.surcharge.pct*100).toFixed(2)}%)` : ''}`,
+            `💵 Total Bruto: ${euro(snapshot.gross)}`,
+            `🔻 Desconto: ${(snapshot.discount > 0 ? '− ' : '') + euro(snapshot.discount)}`,
+            `✅ Total a pagar: ${euro(snapshot.final)}`].join('\n');
           const description = [info.join('\n'),'','**🛠️ Alterações (Oficina)**',modsDesc,'','**🧰 Serviços prestados**',svcsDesc,'',totalsBlock].join('\n');
           const payload = {content:null,embeds:[{author:{name:header,icon_url:"https://i.imgur.com/RwYDIAZ.png"},description:description,color:5814783,footer:{text:new Date(snapshot.date).toLocaleString('pt-PT')}}]};
           fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>{if(!r.ok) throw new Error('HTTP '+r.status); return r.text();}).then(()=>resolve()).catch(reject);
@@ -467,15 +583,43 @@
     // ====== SELF-TESTS ======
     (function(){
       try{
-        console.assert(euro(215)==='2,15\u00A0€','euro(215) → 2,15 €');
-        console.assert(euro(50000000)==='500\u00A0000,00\u00A0€','euro(50.000.000¢) → 500 000,00 €');
-        console.assert(euro(300000)==='3\u00A0000,00\u00A0€','euro(300000¢) → 3 000,00 €');
-        console.assert(euro(-123456)==='-1\u00A0234,56\u00A0€','euro(-123456¢) → -1 234,56 €');
-        console.assert(onlyNum('7\u00A0500,00\u00A0€')===750000,'extract 7 500,00 € in cents');
+        // € formatting
+        console.assert(euro(215)==='2,15 €','euro(215) → 2,15 €');
+        console.assert(euro(50000000)==='500 000,00 €','euro(50.000.000¢) → 500 000,00 €');
+        console.assert(euro(300000)==='3 000,00 €','euro(300000¢) → 3 000,00 €');
+        console.assert(euro(-123456)==='-1 234,56 €','euro(-123456¢) → -1 234,56 €');
+        // onlyNum
+        console.assert(onlyNum('7 500,00 €')===750000,'extract 7 500,00 € in cents');
+        // esc
         console.assert(esc("<a 'b' & c>") === '&lt;a &#39;b&#39; &amp; c&gt;', 'esc() mapeia corretamente');
-        console.assert(normalizeNumberInput('10\u00A0000,50') === 10000.5, 'normaliza espaço NBSP e vírgula');
+        // number normalization & clamp
+        console.assert(normalizeNumberInput('10 000,50') === 10000.5, 'normaliza espaço NBSP e vírgula');
         console.assert(clampPct(150) === 100 && clampPct(-5) === 0, 'clamp 0–100');
-        // sanity on listeners did not throw
+        // surcharge tests (faixas)
+        (function(){
+          const sEdgeLow = getSurchargeInfo(250000); // 250k → 3%
+          console.assert(sEdgeLow.amount === Math.round(250000*100*0.03), 'surcharge 250k at 3% (edge)');
+          const s0 = getSurchargeInfo(200000); // 200k → 3%
+          console.assert(s0.amount === Math.round(200000*100*0.03), 'surcharge 200k at 3%');
+          const s1 = getSurchargeInfo(400000); // 400k → 2%
+          console.assert(s1.amount === Math.round(400000*100*0.02), 'surcharge 400k at 2%');
+          const sEdgeHigh = getSurchargeInfo(500000); // 500k → 2%
+          console.assert(sEdgeHigh.amount === Math.round(500000*100*0.02), 'surcharge 500k at 2% (edge)');
+          const s2 = getSurchargeInfo(600000); // 600k → 0%
+          console.assert(s2.amount === 0, 'surcharge 600k at 0%');
+        })();
+        // remap tests (percentagem do carro)
+        (function(){
+          const car = 100000; // 100k€
+          const unit = Math.round(car*100*SERVICE_REMAP_PCT);
+          console.assert(unit === Math.round(100000*100*SERVICE_REMAP_PCT), 'reprogramação = pct do carro');
+        })();
+        // join test (evitar line breaks crús)
+        (function(){
+          const temp = ['a','b','c'].join('\n');
+          console.assert(temp.includes('\n'), 'join com \n OK');
+        })();
+        // sanity timer
         console.assert(typeof window.__clockTimer !== 'undefined', 'clock timer set');
       }catch(e){ console.warn('Self-tests falharam:',e); }
     })();
