@@ -182,7 +182,7 @@
           <div class="grid">
             <div style="color:var(--muted)">Oficina</div><div id="totMods">0,00 €</div>
             <div style="color:var(--muted)">Serviços</div><div id="totSvc">0,00 €</div>
-            <div style="color:var(--muted)">Taxa (faixa preço)</div><div id="totSurcharge">0,00 €</div>
+            <div style="color:var(--muted)">Taxa (baixo valor)</div><div id="totSurcharge">0,00 €</div>
             <div style="color:var(--muted)">Total bruto</div><div id="totGross">0,00 €</div>
             <div style="color:var(--muted)">Desconto</div><div id="totDisc">0,00 €</div>
             <div style="font-weight:900">Total devido</div><div style="font-weight:900" id="totFinal">0,00 €</div>
@@ -221,8 +221,8 @@
     // === REGRAS DE TAXA EXTRA POR FAIXA DE PREÇO DO VEÍCULO ===
     // 'to' é em EUROS. Edita aqui.
     const SURCHARGE_RULES = [
-      { to: 250000, pct: 0.011, label: '0–250.000 € (3%)' },
-      { to: 500000, pct: 0.07, label: '250.000–500.000 € (2%)' },
+      { to: 250000, pct: 0.015, label: '0–250.000 € (15%)' },
+      { to: 500000, pct: 0.07, label: '250.000–500.000 € (7%)' },
       { to: Infinity, pct: 0, label: '> 500.000 € (0%)' }
     ];
 
@@ -289,8 +289,8 @@
       { name:'CarPlay', price:5000000 },
       { name:'Tablet de Corrida', price:50000000 },
       { name:'Boosting Tablet', price:50000000 },
-      { name:'GPS Hacking', price:7500000 },
-      { name:'Hacking Device', price:7500000 },
+      { name:'GPS Hacking', price:15500000 },
+      { name:'Hacking Device', price:15500000 },
       { name:'Reprogramação', percentOfCar: SERVICE_REMAP_PCT, toggleOnly:true },
       { name:'Serviço Fora (€/km)', price:SERVICE_OUT_PRICE_PER_KM }
     ];
@@ -626,3 +626,4 @@
   </script>
 </body>
 </html>
+
