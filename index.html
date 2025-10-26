@@ -215,11 +215,10 @@
   <script>
     // ====== CONFIG ======
     const WEBHOOK_URL = 'https://discord.com/api/webhooks/1424102295989260290/O551-zFM41O1NWTm_f7eALRbe2nqn-JUUq-0lvwY6HQwt3DfSnYc8R9WK932zf3v2ry4';
-    var SERVICE_OUT_PRICE_PER_KM = 25000; // 250,00 € por km (cêntimos)
+    var SERVICE_OUT_PRICE_PER_KM = 1500; // 250,00 € por km (cêntimos)
     const SERVICE_REMAP_PCT = 0.08; // 8% do valor do veículo (editável)
 
-	// === REGRAS DE TAXA EXTRA POR FAIXA DE PREÇO DO VEÍCULO ===
-	// Escala PRO (ajustada 0–20 M €)
+	// === REGRAS DE TAXA EXTRA POR BAIXA DE PREÇO DO VEÍCULO ===
 	const SURCHARGE_RULES = [
 		{ to:  50000,    pct: 0.09,  label: '0–50.000 € (9 %)' },
 		{ to: 150000,    pct: 0.06,  label: '50.000–150.000 € (6 %)' },
@@ -274,7 +273,7 @@
 		{name:'Cor jantes', pct:0.00025}
       ]},
 	  {label:'EXTRAS', items:[
-		{name:'Extra', pct:0.017}
+		{name:'Extra', pct:0.013}
       ]},
       {label:'OUTROS', items:[
         {name:'Buzina', pct:0.00075}, 
@@ -387,10 +386,7 @@
 
       const dOf = gid('detailsOficina');
       if(dOf){
-        // Mantém o acordeão visível; apenas aplica estilo de desativado.
         dOf.classList.toggle('disabled', !ready);
-        // NÃO fecha automaticamente quando não está pronto para evitar a sensação de "sumiu".
-        // Se quiseres o comportamento antigo, posso voltar a fechar/abrir aqui.
       }
 
       RT.mods.forEach(function(m){ m.toggle.disabled = !ready; if(!ready){ m.toggle.checked=false; m.toggle.setAttribute('aria-checked','false'); m.priceEl.value=euro(0);} });
@@ -426,11 +422,10 @@
       },0);
       var baseGross = modsTotal + svcTotal;
 
-      // Taxa por faixa de preço do veículo (em euros, depois convertido p/ cêntimos)
       const carValEuro = normalizeNumberInput(gval('carValue')) || 0;
       const surcharge = getSurchargeInfo(carValEuro);
 
-      var gross = baseGross + surcharge.amount; // bruto já inclui a taxa
+      var gross = baseGross + surcharge.amount;
       var pct = clampPct(normalizeNumberInput(gval('partnerPct')||'0'));
       var discount = Math.round(gross * (pct/100));
       var final = Math.max(0, gross - discount);
@@ -559,7 +554,7 @@
 
     // ====== Limpar ======
     function clearAll(){
-      ['colaborador','cliente','carValue','partnerPct','partnerCompany'].forEach(function(id){ var el=gid(id); if(el) el.value=''; });
+      ['cliente','carValue','partnerPct','partnerCompany'].forEach(function(id){ var el=gid(id); if(el) el.value=''; });
       RT.mods.forEach(function(m){ m.toggle.checked=false; m.toggle.setAttribute('aria-checked','false'); m.priceEl.value=euro(0); });
       RT.services.forEach(function(s){ if(s.qtyEl){ s.qtyEl.value=''; s.qtyEl.disabled=true; } if(s.switchEl){ s.switchEl.checked=false; s.switchEl.setAttribute('aria-checked','false'); } s.totalEl.textContent=euro(0); });
       identityGuard(); recalcTotals();
