@@ -106,17 +106,36 @@
 </head>
 <body>
   <div class="app">
-    <header class="header">
-      <div style="display:flex;align-items:center;gap:14px;">
-        <img class="logo" src="https://i.imgur.com/RwYDIAZ.png" alt="Logo RedLine Performance" />
-        <div>
-          <div style="font-weight:900;letter-spacing:.2px">RedLine Performance</div>
-          <div style="font-size:12px;color:var(--muted)">Sistema de Faturas - V2</div>
-        </div>
-      </div>
-      <span id="clock" style="font-weight:900;color:var(--muted);font-size:16px;"></span>
-    </header>
+	<header class="header">
+		<div style="display:flex;align-items:center;gap:14px;">
+			<img class="logo" src="https://i.imgur.com/RwYDIAZ.png" alt="Logo RedLine Performance" />
+		<div>
+      <div style="font-weight:900;letter-spacing:.2px">RedLine Performance</div>
+      <div style="font-size:12px;color:var(--muted)">Sistema de Faturas - V2</div>
+    </div>
+  </div>
 
+  <!-- LADO DIREITO: botão discreto + relógio -->
+  <div style="display:flex;align-items:center;gap:12px;">
+
+    <!-- BOTÃO DISCRETO -->
+    <a href="carros.html"
+       style="
+         font-size:12px;
+         padding:5px 12px;
+         border-radius:6px;
+         background:#2a2f3a;
+         color:#cdd4e0;
+         border:1px solid #3a4150;
+         text-decoration:none;
+         transition:0.2s;
+       "
+       onmouseover="this.style.background='#363c49'"
+       onmouseout="this.style.background='#2a2f3a'">
+      Carros
+    </a>
+  </div>
+</header>
     <div class="columns">
       <section>
         <details id="detailsOficina" open>
@@ -215,7 +234,7 @@
   <script>
     // ====== CONFIG ======
     const WEBHOOK_URL = 'https://discord.com/api/webhooks/1424102295989260290/O551-zFM41O1NWTm_f7eALRbe2nqn-JUUq-0lvwY6HQwt3DfSnYc8R9WK932zf3v2ry4';
-    // var SERVICE_OUT_PRICE_PER_KM = 750; // 75,00 € por km (cêntimos)
+    // var SERVICE_OUT_PRICE_PER_KM = 750; // 7,50 € por km (cêntimos)
     const SERVICE_REMAP_PCT = 0.08; // 8% do valor do veículo (editável)
 
 	// === REGRAS DE TAXA EXTRA POR BAIXA DE PREÇO DO VEÍCULO ===
@@ -578,61 +597,8 @@
       identityGuard();
     }
     document.addEventListener('DOMContentLoaded', wire);
-    // limpar timer do relógio ao fechar
-    window.addEventListener('beforeunload', function(){ if(window.__clockTimer){ clearInterval(window.__clockTimer); } }, { once:true });
     // Impedir valores negativos/decimais em Qtd (colagem, etc.)
     document.addEventListener('input', function(e){ if(e.target.classList && e.target.classList.contains('svc-qty')){ var v = Math.max(0, parseInt(e.target.value||'0',10)||0); if(String(v) !== e.target.value){ e.target.value = String(v); } } }, { passive:true });
-
-
-    // ====== Atalhos de teclado ======
-    document.addEventListener('keydown', function(e){
-      if((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')){ e.preventDefault(); try{ openInvoice(); }catch(_){} }
-      if((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')){ e.preventDefault(); var el = gid('cliente'); if(el) el.focus(); }
-    });
-
-    // ====== SELF-TESTS ======
-    document.addEventListener('DOMContentLoaded', function(){
-      try{
-        // € formatting
-        console.assert(euro(215)==='2,15 €','euro(215) → 2,15 €');
-        console.assert(euro(50000000)==='500 000,00 €','euro(50.000.000¢) → 500 000,00 €');
-        console.assert(euro(300000)==='3 000,00 €','euro(300000¢) → 3 000,00 €');
-        console.assert(euro(-123456)==='-1 234,56 €','euro(-123456¢) → -1 234,56 €');
-        // onlyNum
-        console.assert(onlyNum('7 500,00 €')===750000,'extract 7 500,00 € in cents');
-        // esc
-        console.assert(esc("<a 'b' & c>") === '&lt;a &#39;b&#39; &amp; c&gt;', 'esc() mapeia corretamente');
-        // number normalization & clamp
-        console.assert(normalizeNumberInput('10 000,50') === 10000.5, 'normaliza espaço NBSP e vírgula');
-        console.assert(clampPct(150) === 100 && clampPct(-5) === 0, 'clamp 0–100');
-        // surcharge tests (faixas)
-        (function(){
-          const sEdgeLow = getSurchargeInfo(250000); // 250k → 3%
-          console.assert(sEdgeLow.amount === Math.round(250000*100*0.03), 'surcharge 250k at 3% (edge)');
-          const s0 = getSurchargeInfo(200000); // 200k → 3%
-          console.assert(s0.amount === Math.round(200000*100*0.03), 'surcharge 200k at 3%');
-          const s1 = getSurchargeInfo(400000); // 400k → 2%
-          console.assert(s1.amount === Math.round(400000*100*0.02), 'surcharge 400k at 2%');
-          const sEdgeHigh = getSurchargeInfo(500000); // 500k → 2%
-          console.assert(sEdgeHigh.amount === Math.round(500000*100*0.02), 'surcharge 500k at 2% (edge)');
-          const s2 = getSurchargeInfo(600000); // 600k → 0%
-          console.assert(s2.amount === 0, 'surcharge 600k at 0%');
-        })();
-        // remap tests (percentagem do carro)
-        (function(){
-          const car = 100000; // 100k€
-          const unit = Math.round(car*100*SERVICE_REMAP_PCT);
-          console.assert(unit === Math.round(100000*100*SERVICE_REMAP_PCT), 'reprogramação = pct do carro');
-        })();
-        // join test (evitar line breaks crús)
-        (function(){
-          const temp = ['a','b','c'].join('\n');
-          console.assert(temp.includes('\n'), 'join com \n OK');
-        })();
-        // sanity timer
-        console.assert(typeof window.__clockTimer !== 'undefined', 'clock timer set');
-      }catch(e){ console.warn('Self-tests falharam:',e); }
-    })();
   </script>
 </body>
 </html>
