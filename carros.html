@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Catálogo de Carros – RedLine Performance</title>
+  <link rel="icon" href="https://i.imgur.com/RwYDIAZ.png">
+  <style>
+    :root{
+      --bg:#0b1020;--panel:#111827;--panel2:#0b1220;--text:#e5e7eb;--muted:#9ca3af;
+      --accent:#22c55e;--accent-2:#16a34a;--border:rgba(255,255,255,.10);--shadow-xl:0 20px 60px rgba(0,0,0,.45);
+      --radius-lg:16px;--radius-md:12px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      margin:0;
+      color:var(--text);
+      background:radial-gradient(1200px 800px at 10% -10%, rgba(34,197,94,.10), transparent 60%),
+                 radial-gradient(800px 600px at 110% 10%, rgba(59,130,246,.10), transparent 60%),
+                 var(--bg);
+      font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;
+      font-size:12.5px;
+      letter-spacing:.2px;
+      min-height:100dvh;
+      display:flex;
+      justify-content:center;
+      padding:16px;
+    }
+    .app{
+      width:min(1260px,100%);
+      min-height:calc(100dvh - 32px);
+      background:linear-gradient(180deg,var(--panel)0%,var(--panel2)100%);
+      border:1px solid var(--border);
+      border-radius:var(--radius-lg);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      box-shadow:var(--shadow-xl);
+      backdrop-filter:blur(6px);
+    }
+
+    .header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:14px 18px;
+      background:linear-gradient(180deg,rgba(31,41,55,.75),rgba(17,24,39,.55));
+      border-bottom:1px solid var(--border);
+    }
+    .footer{
+      margin-top:auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:12px 16px;
+      border-top:1px solid var(--border);
+      background:rgba(17,24,39,.75);
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .logo{width:36px;height:36px;border-radius:8px;box-shadow:0 8px 18px rgba(0,0,0,.35)}
+
+    .btn-top{
+      font-size:12px;
+      padding:5px 12px;
+      border-radius:6px;
+      background:#2a2f3a;
+      color:#cdd4e0;
+      border:1px solid #3a4150;
+      text-decoration:none;
+      font-weight:600;
+      transition:background .2s,transform .15s;
+    }
+    .btn-top:hover{
+      background:#363c49;
+      transform:translateY(-1px);
+    }
+
+    .main{
+      flex:1;
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      overflow:auto;
+    }
+.categoria-pesquisa {
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.categoria-pesquisa input {
+  width: 100%;
+  max-width: 260px; /* mesmo tamanho da global */
+  padding: 7px 10px;
+  border-radius: 999px; /* arredondado igual */
+  border: 1px solid var(--border);
+  background: #020617;
+  color: var(--text);
+  font-size: 12px;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+
+.categoria-pesquisa input::placeholder {
+  color: var(--muted);
+}
+
+.categoria-pesquisa input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(34,197,94,.4);
+}
+
+    /* Navegação de categorias */
+    .categorias-nav{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom:6px;
+    }
+    .categorias-nav button{
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#020617;
+      color:var(--text);
+      font-size:12px;
+      padding:6px 12px;
+      cursor:pointer;
+      transition:background .15s, transform .1s, border-color .15s, box-shadow .15s, color .15s;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      white-space:nowrap;
+    }
+    .categorias-nav button span.icon{
+      font-size:14px;
+    }
+    .categorias-nav button span.label{
+      font-weight:600;
+    }
+    .categorias-nav button span.count{
+      font-size:11px;
+      color:var(--muted);
+    }
+    .categorias-nav button:hover{
+      transform:translateY(-1px);
+    }
+    .categorias-nav button.active{
+      box-shadow:0 0 0 1px rgba(34,197,94,.35);
+    }
+
+    /* Cores específicas por categoria (hover + active) */
+    .categorias-nav button.cat-Sports:hover,
+    .categorias-nav button.cat-Sports.active{
+      border-color:#22c55e;
+      background:rgba(34,197,94,0.18);
+      color:#bbf7d0;
+    }
+    .categorias-nav button.cat-Compacts:hover,
+    .categorias-nav button.cat-Compacts.active{
+      border-color:#3b82f6;
+      background:rgba(59,130,246,0.18);
+      color:#dbeafe;
+    }
+    .categorias-nav button.cat-Trabalho:hover,
+    .categorias-nav button.cat-Trabalho.active{
+      border-color:#eab308;
+      background:rgba(234,179,8,0.18);
+      color:#fef9c3;
+    }
+    .categorias-nav button.cat-Muscle:hover,
+    .categorias-nav button.cat-Muscle.active{
+      border-color:#f97316;
+      background:rgba(249,115,22,0.18);
+      color:#ffedd5;
+    }
+    .categorias-nav button.cat-Off-Road:hover,
+    .categorias-nav button.cat-Off-Road.active{
+      border-color:#22c55e;
+      background:rgba(21,128,61,0.22);
+      color:#bbf7d0;
+    }
+    .categorias-nav button.cat-SUV:hover,
+    .categorias-nav button.cat-SUV.active{
+      border-color:#6366f1;
+      background:rgba(99,102,241,0.18);
+      color:#e0e7ff;
+    }
+    .categorias-nav button.cat-SportClassics:hover,
+    .categorias-nav button.cat-SportClassics.active{
+      border-color:#facc15;
+      background:rgba(250,204,21,0.16);
+      color:#fef3c7;
+    }
+    .categorias-nav button.cat-Coupe:hover,
+    .categorias-nav button.cat-Coupe.active{
+      border-color:#ec4899;
+      background:rgba(236,72,153,0.18);
+      color:#fce7f3;
+    }
+    .categorias-nav button.cat-Motorcycle:hover,
+    .categorias-nav button.cat-Motorcycle.active{
+      border-color:#14b8a6;
+      background:rgba(20,184,166,0.18);
+      color:#ccfbf1;
+    }
+    .categorias-nav button.cat-Troll:hover,
+    .categorias-nav button.cat-Troll.active{
+      border-color:#a855f7;
+      background:rgba(168,85,247,0.18);
+      color:#f3e8ff;
+    }
+    .categorias-nav button.cat-VIP:hover,
+    .categorias-nav button.cat-VIP.active{
+      border-color:#fbbf24;
+      background:rgba(251,191,36,0.20);
+      color:#fffbeb;
+    }
+
+    /* Barra de pesquisa */
+    .barra-pesquisa{
+      margin-bottom:6px;
+      display:flex;
+      justify-content:flex-start;
+    }
+    .barra-pesquisa input{
+      width:100%;
+      max-width:260px;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#020617;
+      color:var(--text);
+      font-size:12px;
+      outline:none;
+      transition:border-color .15s, box-shadow .15s, background .15s;
+    }
+    .barra-pesquisa input::placeholder{
+      color:var(--muted);
+    }
+    .barra-pesquisa input:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(34,197,94,.4);
+      background:#020617;
+    }
+
+    .lista-categorias{
+      display:flex;
+      flex-direction:column;
+      gap:20px;
+      margin-top:4px;
+    }
+
+    .categoria-bloco{
+      border-radius:var(--radius-md);
+      border:1px solid var(--border);
+      background:rgba(15,23,42,.95);
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+      padding:14px 16px;
+      transition:border-color .18s, box-shadow .18s, transform .12s;
+    }
+    .categoria-bloco.ativo{
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(34,197,94,.5), 0 18px 40px rgba(0,0,0,.6);
+      transform:translateY(-1px);
+    }
+
+    .categoria-titulo{
+      font-size:16px;
+      font-weight:800;
+      margin-bottom:10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+    .categoria-titulo span{
+      font-size:11px;
+      color:var(--muted);
+      font-weight:500;
+    }
+
+    .tabela-carros{
+      width:100%;
+      border-collapse:collapse;
+      font-size:12.5px;
+    }
+    .tabela-carros thead{
+      background:rgba(15,23,42,.9);
+    }
+    .tabela-carros th,
+    .tabela-carros td{
+      padding:8px 10px;
+      border-bottom:1px solid rgba(55,65,81,.7);
+      text-align:left;
+    }
+    .tabela-carros th{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:var(--muted);
+    }
+    .tabela-carros tbody tr:nth-child(odd){
+      background:rgba(15,23,42,.7);
+    }
+    .tabela-carros tbody tr:hover{
+      background:rgba(31,41,55,.95);
+    }
+
+    .col-modelo{width:45%;}
+    .col-preco{width:25%;}
+    .col-mala{width:15%;}
+
+    @media (max-width:700px){
+      .tabela-carros th:nth-child(3),
+      .tabela-carros td:nth-child(3){
+        display:none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <img class="logo" src="https://i.imgur.com/RwYDIAZ.png" alt="Logo RedLine Performance" />
+        <div>
+          <div style="font-weight:900;letter-spacing:.2px">RedLine Performance</div>
+          <div style="font-size:12px;color:var(--muted)">Catálogo de Carros</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px;">
+        <a href="index.html" class="btn-top">Faturação</a>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- Botões de categorias (AGORA ANTES da pesquisa) -->
+      <section id="categoriasNav" class="categorias-nav"></section>
+
+      <!-- Barra de pesquisa -->
+      <section class="barra-pesquisa">
+        <input
+          type="text"
+          id="pesquisaCarro"
+          placeholder="Procurar modelo..."
+          autocomplete="off"
+        />
+      </section>
+
+      <!-- Listas por categoria -->
+      <section id="listaCategorias" class="lista-categorias"></section>
+    </main>
+
+    <footer class="footer">© 2025 RedLine Performance — Todos os direitos reservados</footer>
+  </div>
+
+  <script>
+    const carros = [
+      // === SPORTS ===
+			{ nome: "10FWIDEBODY", mala: 0, preco: 20000000, categoria: "Sports" },
+			{ nome: "300R", mala: 0, preco: 2000000, categoria: "Sports" },
+			{ nome: "8FDRAFTER", mala: 0, preco: 5000000, categoria: "Sports" },
+			{ nome: "9F", mala: 0, preco: 6000000, categoria: "Sports" },
+			{ nome: "ALPHA", mala: 0, preco: 3500000, categoria: "Sports" },
+			{ nome: "BANSHEE", mala: 0, preco: 1300000, categoria: "Sports" },
+			{ nome: "BESTIA GTS", mala: 0, preco: 2500000, categoria: "Sports" },
+			{ nome: "BLISTA COMPACT", mala: 0, preco: 150000, categoria: "Sports" },
+			{ nome: "BUFFALO S", mala: 0, preco: 150000, categoria: "Sports" },
+			{ nome: "CALICO GTF", mala: 0, preco: 170000, categoria: "Sports" },
+			{ nome: "CARBONIZZARE", mala: 0, preco: 4000000, categoria: "Sports" },
+			{ nome: "COMET", mala: 0, preco: 500000, categoria: "Sports" },
+			{ nome: "COMET RETRO", mala: 0, preco: 3700000, categoria: "Sports" },
+			{ nome: "COMET S2", mala: 0, preco: 6000000, categoria: "Sports" },
+			{ nome: "COMET SAFARI", mala: 0, preco: 2700000, categoria: "Sports" },
+			{ nome: "COMET SR", mala: 44, preco: 200000, categoria: "Sports" },
+			{ nome: "COQUETTE", mala: 0, preco: 3000000, categoria: "Sports" },
+			{ nome: "COQUETTE D10", mala: 0, preco: 10000000, categoria: "Sports" },
+			{ nome: "CORSITA", mala: 0, preco: 3300000, categoria: "Sports" },
+			{ nome: "ELEGY RETRO", mala: 0, preco: 2000000, categoria: "Sports" },
+			{ nome: "ELEGY RH8", mala: 0, preco: 5000000, categoria: "Sports" },
+			{ nome: "ENVISAGE", mala: 0, preco: 180000, categoria: "Sports" },
+			{ nome: "FELTZER", mala: 0, preco: 300000, categoria: "Sports" },
+			{ nome: "FLASH GT", mala: 0, preco: 2700000, categoria: "Sports" },
+			{ nome: "FUSILADE", mala: 0, preco: 2000000, categoria: "Sports" },
+			{ nome: "FUTO", mala: 0, preco: 350000, categoria: "Sports" },
+			{ nome: "FUTO GTX", mala: 0, preco: 150000, categoria: "Sports" },
+			{ nome: "GB200", mala: 0, preco: 2200000, categoria: "Sports" },
+			{ nome: "GROWLER", mala: 50, preco: 15000000, categoria: "Sports" },
+			{ nome: "IMORGON", mala: 0, preco: 8000000, categoria: "Sports" },
+			{ nome: "ISSI SPORT", mala: 0, preco: 5000000, categoria: "Sports" },
+			{ nome: "ITALI GTO", mala: 0, preco: 8000000, categoria: "Sports" },
+			{ nome: "ITALI GTO STINGER TT", mala: 0, preco: 1500000, categoria: "Sports" },
+			{ nome: "ITALI RSX", mala: 0, preco: 11000000, categoria: "Sports" },
+			{ nome: "JESTER", mala: 0, preco: 5500000, categoria: "Sports" },
+			{ nome: "JESTER RR", mala: 0, preco: 4000000, categoria: "Sports" },
+			{ nome: "JUGULAR", mala: 0, preco: 5500000, categoria: "Sports" },
+			{ nome: "KHAMELION", mala: 0, preco: 2700000, categoria: "Sports" },
+			{ nome: "KOMODA", mala: 0, preco: 3000000, categoria: "Sports" },
+			{ nome: "KURUMA", mala: 0, preco: 2000000, categoria: "Sports" },
+			{ nome: "HSW LA COUREUSE", mala: 0, preco: 100000, categoria: "Sports" },
+			{ nome: "LOCUST", mala: 0, preco: 4700000, categoria: "Sports" },
+			{ nome: "NEON", mala: 0, preco: 2200000, categoria: "Sports" },
+			{ nome: "OMNIS E-GT", mala: 0, preco: 10000000, categoria: "Sports" },
+			{ nome: "PANTHERE", mala: 0, preco: 100000, categoria: "Sports" },
+			{ nome: "PARAGON R", mala: 0, preco: 2800000, categoria: "Sports" },
+			{ nome: "PARIAH", mala: 0, preco: 1200000, categoria: "Sports" },
+			{ nome: "PENUMBRA", mala: 0, preco: 100000, categoria: "Sports" },
+			{ nome: "PENUMBRA FF", mala: 0, preco: 100000, categoria: "Sports" },
+			{ nome: "RAIDEN", mala: 0, preco: 3500000, categoria: "Sports" },
+			{ nome: "RAPID GT CONV", mala: 0, preco: 3500000, categoria: "Sports" },
+			{ nome: "REMUS", mala: 0, preco: 70000, categoria: "Sports" },
+			{ nome: "REVOLTER", mala: 0, preco: 2000000, categoria: "Sports" },
+			{ nome: "RT3000", mala: 0, preco: 200000, categoria: "Sports" },
+			{ nome: "RUSTON", mala: 0, preco: 6000000, categoria: "Sports" },
+			{ nome: "SCHLAGEN GT", mala: 0, preco: 7500000, categoria: "Sports" },
+			{ nome: "CLASSIC WIDEBODY DRIFT", mala: 46, preco: 70000, categoria: "Sports" },
+			{ nome: "SEVEN-70", mala: 0, preco: 5000000, categoria: "Sports" },
+			{ nome: "SPECTER", mala: 0, preco: 1300000, categoria: "Sports" },
+			{ nome: "SPECTER CUSTOM", mala: 0, preco: 5500000, categoria: "Sports" },
+			{ nome: "SPRUNK BUFFALO", mala: 0, preco: 1500000, categoria: "Sports" },
+			{ nome: "STREITER", mala: 0, preco: 2000000, categoria: "Sports" },
+			{ nome: "SUGOI", mala: 0, preco: 4400000, categoria: "Sports" },
+			{ nome: "SULTAN", mala: 0, preco: 80000, categoria: "Sports" },
+			{ nome: "SULTAN CLASSIC", mala: 0, preco: 80000, categoria: "Sports" },
+			{ nome: "SURANO", mala: 0, preco: 4500000, categoria: "Sports" },
+			{ nome: "TROPOS RALLYE", mala: 0, preco: 2000000, categoria: "Sports" },
+			{ nome: "VECTRE", mala: 0, preco: 6000000, categoria: "Sports" },
+			{ nome: "VERLIERER", mala: 0, preco: 2000000, categoria: "Sports" },
+			{ nome: "V-STR", mala: 0, preco: 2200000, categoria: "Sports" },
+			{ nome: "ZR-350", mala: 0, preco: 1700000, categoria: "Sports" },
+			{ nome: "GBGT", mala: 0, preco: 14000000, categoria: "Sports" },
+			{ nome: "AVENZOR", mala: 0, preco: 6000000, categoria: "Sports" },
+			{ nome: "BREVION", mala: 0, preco: 6500000, categoria: "Sports" },
+			{ nome: "CLYVORE", mala: 0, preco: 12000000, categoria: "Sports" },
+			{ nome: "DRAXOR", mala: 0, preco: 10000000, categoria: "Sports" },
+			{ nome: "ENVALIS", mala: 0, preco: 11000000, categoria: "Sports" },
+			{ nome: "FYNTERRA", mala: 0, preco: 7500000, categoria: "Sports" },
+			{ nome: "GRYNTOR", mala: 0, preco: 4750000, categoria: "Sports" },
+			{ nome: "HALVION", mala: 0, preco: 10000000, categoria: "Sports" },
+			{ nome: "IRMAXIS", mala: 0, preco: 5000000, categoria: "Sports" },
+			{ nome: "KRYSOLIN", mala: 0, preco: 3700000, categoria: "Sports" },
+			{ nome: "LUXARION", mala: 0, preco: 3000000, categoria: "Sports" },
+			{ nome: "NOVRION", mala: 0, preco: 10500000, categoria: "Sports" },
+			{ nome: "MYNTOR", mala: 0, preco: 800000, categoria: "Sports" },
+			{ nome: "OXALYTH", mala: 0, preco: 8000000, categoria: "Sports" },
+			{ nome: "PYRRANTIS", mala: 0, preco: 2100000, categoria: "Sports" },
+			{ nome: "RYNTHERA", mala: 0, preco: 150000, categoria: "Sports" },
+			{ nome: "SYLVRIX", mala: 0, preco: 15000000, categoria: "Sports" },
+			{ nome: "TROVIX", mala: 0, preco: 7000000, categoria: "Sports" },
+			{ nome: "ULVORIS", mala: 0, preco: 400000, categoria: "Sports" },
+			{ nome: "WYLENOR", mala: 0, preco: 6700000, categoria: "Sports" },
+			{ nome: "XYVORAN", mala: 0, preco: 6000000, categoria: "Sports" },
+			{ nome: "YNDRAX", mala: 0, preco: 6200000, categoria: "Sports" },
+			{ nome: "BRIVONTA", mala: 0, preco: 12000000, categoria: "Sports" },
+			{ nome: "CYRVEXIS", mala: 0, preco: 13000000, categoria: "Sports" },
+			{ nome: "EXALVRO", mala: 0, preco: 8000000, categoria: "Sports" },
+			{ nome: "FYROSYN", mala: 0, preco: 13000000, categoria: "Sports" },
+			{ nome: "GALVROX", mala: 0, preco: 16000000, categoria: "Sports" },
+			{ nome: "HYNTRIX", mala: 0, preco: 11000000, categoria: "Sports" },
+			{ nome: "JAXORIN", mala: 0, preco: 8500000, categoria: "Sports" },
+			{ nome: "IVRYLON", mala: 0, preco: 13000000, categoria: "Sports" },
+			{ nome: "KYLTARIS", mala: 0, preco: 5000000, categoria: "Sports" },
+			{ nome: "EMERUS GTR", mala: 0, preco: 15000000, categoria: "Sports" },
+			{ nome: "720 SSD", mala: 0, preco: 16000000, categoria: "Sports" },
+			{ nome: "COMET6SCW", mala: 0, preco: 7000000, categoria: "Sports" },
+			{ nome: "ESTANCIA", mala: 0, preco: 8000000, categoria: "Sports" },
+			{ nome: "BENEFECGT", mala: 0, preco: 15000000, categoria: "Sports" },
+			{ nome: "NONSUV", mala: 0, preco: 8000000, categoria: "Sports" },
+			{ nome: "audace", mala: 0, preco: 15000000, categoria: "Sports" },
+
+		// === Compacts ===
+			{ nome: "ASBO", mala: 0, preco: 70000, categoria: "Compacts" },
+			{ nome: "BRIOSO 300", mala: 0, preco: 65000, categoria: "Compacts" },
+			{ nome: "BRIOSO 300 WIDEBOY", mala: 0, preco: 70000, categoria: "Compacts" },
+			{ nome: "BRIOSO R/A", mala: 0, preco: 100000, categoria: "Compacts" },
+			{ nome: "DILETTANTE", mala: 0, preco: 90000, categoria: "Compacts" },
+			{ nome: "ISSI", mala: 0, preco: 120000, categoria: "Compacts" },
+			{ nome: "ISSI CLASSIC", mala: 100, preco: 120000, categoria: "Compacts" },
+			{ nome: "PANTO", mala: 0, preco: 130000, categoria: "Compacts" },
+			{ nome: "PRAIRIE", mala: 0, preco: 120000, categoria: "Compacts" },
+			{ nome: "RHAPSODY", mala: 0, preco: 110000, categoria: "Compacts" },
+			{ nome: "COUPES", mala: 0, preco: 120000, categoria: "Compacts" },
+			{ nome: "EUROS X32", mala: 0, preco: 150000, categoria: "Compacts" },
+			{ nome: "EXEMPLAR", mala: 0, preco: 200000, categoria: "Compacts" },
+			{ nome: "FELON", mala: 0, preco: 150000, categoria: "Compacts" },
+			{ nome: "FR36", mala: 0, preco: 170000, categoria: "Compacts" },
+			{ nome: "JACKAL", mala: 0, preco: 150000, categoria: "Compacts" },
+			{ nome: "KANJO SJ", mala: 0, preco: 120000, categoria: "Compacts" },
+			{ nome: "ORACLE", mala: 0, preco: 120000, categoria: "Compacts" },
+			{ nome: "ORACLE XS", mala: 0, preco: 120000, categoria: "Compacts" },
+			{ nome: "POSTLUDE", mala: 0, preco: 120000, categoria: "Compacts" },
+			{ nome: "PREVION", mala: 0, preco: 130000, categoria: "Compacts" },
+			{ nome: "SENTINEL", mala: 0, preco: 120000, categoria: "Compacts" },
+			{ nome: "SENTINEL XS", mala: 0, preco: 150000, categoria: "Compacts" },
+			{ nome: "WINDSOR", mala: 0, preco: 120000, categoria: "Compacts" },
+			{ nome: "WINDSOR DROP", mala: 75, preco: 120000, categoria: "Compacts" },
+			{ nome: "ZION", mala: 0, preco: 120000, categoria: "Compacts" },
+			{ nome: "ZION CABRIO", mala: 0, preco: 120000, categoria: "Compacts" },
+			{ nome: "APOCALYPSE ISSI", mala: 0, preco: 550000, categoria: "Compacts" },
+			{ nome: "BLISTA", mala: 0, preco: 90000, categoria: "Compacts" },
+			{ nome: "BLISTA KANJO", mala: 0, preco: 150000, categoria: "Compacts" },
+			{ nome: "CLUB", mala: 0, preco: 120000, categoria: "Compacts" },
+			
+		// === TRABALHO ===
+			{ nome: "YOSEMITE 1500", mala: 0, preco: 1200000, categoria: "Trabalho" },
+			{ nome: "YOSEMITE RANCHER", mala: 0, preco: 1550000, categoria: "Trabalho" },
+			{ nome: "BISON", mala: 0, preco: 1000000, categoria: "Trabalho" },
+			{ nome: "BOBCAT XL", mala: 0, preco: 700000, categoria: "Trabalho" },
+			{ nome: "CIVILIAN BURRITO", mala: 0, preco: 150000, categoria: "Trabalho" },
+			{ nome: "JOURNEY", mala: 300, preco: 100000, categoria: "Trabalho" },		
+			{ nome: "JOURNEY II", mala: 0, preco: 170000, categoria: "Trabalho" },
+			{ nome: "MINIVAN", mala: 0, preco: 400000, categoria: "Trabalho" },
+			{ nome: "PARADISE", mala: 0, preco: 300000, categoria: "Trabalho" },
+			{ nome: "RUMPO CUSTOM", mala: 0, preco: 1500000, categoria: "Trabalho" },
+			{ nome: "SURFER", mala: 0, preco: 200000, categoria: "Trabalho" },
+			{ nome: "YOUGA", mala: 325, preco: 250000, categoria: "Trabalho" },
+			{ nome: "YOUGA CLASSIC", mala: 0, preco: 90000, categoria: "Trabalho" },
+			{ nome: "YOUGA CLASSIC 4X4", mala: 0, preco: 500000, categoria: "Trabalho" },
+			{ nome: "GUARDIAN", mala: 500, preco: 2000000, categoria: "Trabalho" },
+			{ nome: "QUIVARO", mala: 0, preco: 500000, categoria: "Trabalho" },
+			{ nome: "ZORVANTIS", mala: 0, preco: 600000, categoria: "Trabalho" },
+			{ nome: "ARVYNOX", mala: 0, preco: 750000, categoria: "Trabalho" },
+			{ nome: "CONTENDERBAJA", mala: 0, preco: 2500000, categoria: "Trabalho" },	
+			{ nome: "CONTENDERC", mala: 0, preco: 2500000, categoria: "Trabalho" },
+			{ nome: "INPERIAL", mala: 0, preco: 2000000, categoria: "Trabalho" },
+
+		// === MUSCLE ===
+			{ nome: "BLADE", mala: 0, preco: 130000, categoria: "Muscle" },
+			{ nome: "BROADWAY", mala: 0, preco: 85000, categoria: "Muscle" },
+			{ nome: "BUFFALO EVX", mala: 0, preco: 300000, categoria: "Muscle" },
+			{ nome: "BUFFALO STX", mala: 0, preco: 3000000, categoria: "Muscle" },
+			{ nome: "CLIQUE", mala: 0, preco: 600000, categoria: "Muscle" },
+			{ nome: "CLIQUE WAGON", mala: 0, preco: 85000, categoria: "Muscle" },
+			{ nome: "COQUETTE BLACKFIN", mala: 0, preco: 435000, categoria: "Muscle" },
+			{ nome: "DEVIANT", mala: 0, preco: 1000000, categoria: "Muscle" },
+			{ nome: "DOMINATOR ASP", mala: 0, preco: 850000, categoria: "Muscle" },
+			{ nome: "DOMINATOR GT", mala: 0, preco: 700000, categoria: "Muscle" },
+			{ nome: "DOMINATOR GTT", mala: 0, preco: 750000, categoria: "Muscle" },
+			{ nome: "DOMINATOR GTX", mala: 0, preco: 1500000, categoria: "Muscle" },
+			{ nome: "FACTION CUSTOM DONK", mala: 0, preco: 200000, categoria: "Muscle" },
+			{ nome: "GAUNTLET", mala: 0, preco: 500000, categoria: "Muscle" },
+			{ nome: "GAUNTLET CLASSIC CUSTOM", mala: 0, preco: 700000, categoria: "Muscle" },
+			{ nome: "GAUNTLET HELLFIRE", mala: 0, preco: 2000000, categoria: "Muscle" },
+			{ nome: "GREENWOOD", mala: 0, preco: 700000, categoria: "Muscle" },
+			{ nome: "HOTKNIFE", mala: 0, preco: 250000, categoria: "Muscle" },
+			{ nome: "IMPALER LX", mala: 0, preco: 200000, categoria: "Muscle" },
+			{ nome: "IMPALER SZ", mala: 0, preco: 250000, categoria: "Muscle" },
+			{ nome: "MOONBEAM", mala: 0, preco: 300000, categoria: "Muscle" },
+			{ nome: "NIGHTSHADE", mala: 0, preco: 600000, categoria: "Muscle" },
+			{ nome: "PEYOTE GASSER", mala: 0, preco: 1500000, categoria: "Muscle" },
+			{ nome: "PHOENIX", mala: 0, preco: 400000, categoria: "Muscle" },
+			{ nome: "PISSWASSER DOMINATOR", mala: 0, preco: 450000, categoria: "Muscle" },
+			{ nome: "RUINER", mala: 0, preco: 350000, categoria: "Muscle" },
+			{ nome: "RUINER ZZ-8", mala: 0, preco: 200000, categoria: "Muscle" },
+			{ nome: "STALION", mala: 0, preco: 700000, categoria: "Muscle" },
+			{ nome: "TAHOMA COUPE", mala: 0, preco: 200000, categoria: "Muscle" },
+			{ nome: "TAMPA", mala: 0, preco: 250000, categoria: "Muscle" },
+			{ nome: "TULIP", mala: 0, preco: 200000, categoria: "Muscle" },
+			{ nome: "TULIP M-100", mala: 0, preco: 230000, categoria: "Muscle" },
+			{ nome: "VAMOS", mala: 0, preco: 250000, categoria: "Muscle" },
+			{ nome: "VIGERO", mala: 0, preco: 300000, categoria: "Muscle" },
+			{ nome: "VIGERO ZX", mala: 175, preco: 300000, categoria: "Muscle" },
+			{ nome: "VIGERO ZX CONVERTIBLE", mala: 0, preco: 350000, categoria: "Muscle" },
+			{ nome: "VIRGO", mala: 0, preco: 130000, categoria: "Muscle" },
+			{ nome: "VIRGO CLASSIC CUSTOM", mala: 0, preco: 600000, categoria: "Muscle" },
+			{ nome: "WEEVIL CUSTOM", mala: 0, preco: 500000, categoria: "Muscle" },
+			{ nome: "YOSEMITE", mala: 0, preco: 340000, categoria: "Muscle" },
+			{ nome: "GRYVOLAR", mala: 0, preco: 200000, categoria: "Muscle" },
+			{ nome: "VRYLONIS", mala: 0, preco: 300000, categoria: "Muscle" },
+			
+		// === OFF-ROAD ===
+			{ nome: "BIFTA", mala: 0, preco: 300000, categoria: "Off-Road" },
+			{ nome: "BLAZER", mala: 0, preco: 130000, categoria: "Off-Road" },
+			{ nome: "BODHI", mala: 0, preco: 230000, categoria: "Off-Road" },
+			{ nome: "BOOR", mala: 0, preco: 175000, categoria: "Off-Road" },
+			{ nome: "BRAWLER", mala: 0, preco: 185000, categoria: "Off-Road" },
+			{ nome: "CARACARA 4X4", mala: 175, preco: 1000000, categoria: "Off-Road" },
+			{ nome: "DRAUGUR", mala: 0, preco: 700000, categoria: "Off-Road" },
+			{ nome: "DUBSTA 6X6", mala: 0, preco: 1000000, categoria: "Off-Road" },
+			{ nome: "DUNE BUGGY", mala: 0, preco: 500000, categoria: "Off-Road" },
+			{ nome: "EVERON", mala: 175, preco: 340000, categoria: "Off-Road" },
+			{ nome: "FREECRAWLER", mala: 0, preco: 200000, categoria: "Off-Road" },
+			{ nome: "HELLION", mala: 175, preco: 300000, categoria: "Off-Road" },
+			{ nome: "INJECTION", mala: 0, preco: 500000, categoria: "Off-Road" },
+			{ nome: "KAMACHO", mala: 0, preco: 350000, categoria: "Off-Road" },
+			{ nome: "MERRYWEATHER MESA", mala: 0, preco: 500000, categoria: "Off-Road" },
+			{ nome: "MONSTROCITI", mala: 175, preco: 200000, categoria: "Off-Road" },
+			{ nome: "OUTLAW", mala: 0, preco: 300000, categoria: "Off-Road" },
+			{ nome: "DYNTHERO", mala: 0, preco: 6000000, categoria: "Off-Road" },
+		
+		// === SUV ===
+			{ nome: "ALEUTIAN", mala: 0, preco: 130000, categoria: "SUV" },
+			{ nome: "ASTRON", mala: 0, preco: 500000, categoria: "SUV" },
+			{ nome: "BALLER LE", mala: 0, preco: 400000, categoria: "SUV" },
+			{ nome: "BEEJAY XL", mala: 0, preco: 330000, categoria: "SUV" },
+			{ nome: "CASTIGATOR", mala: 0, preco: 135000, categoria: "SUV" },
+			{ nome: "NEW CAVALCADE", mala: 0, preco: 130000, categoria: "SUV" },
+			{ nome: "CAVALCADE XL", mala: 0, preco: 135000, categoria: "SUV" },
+			{ nome: "DORADO", mala: 0, preco: 300000, categoria: "SUV" },
+			{ nome: "DUBSTA2 DUBSTA", mala: 0, preco: 4600000, categoria: "SUV" },
+			{ nome: "DUBSTA", mala: 0, preco: 4500000, categoria: "SUV" },
+			{ nome: "GRANGER", mala: 0, preco: 120000, categoria: "SUV" },
+			{ nome: "GRESLEY", mala: 0, preco: 135000, categoria: "SUV" },
+			{ nome: "HABANERO", mala: 0, preco: 100000, categoria: "SUV" },
+			{ nome: "HUNTLEY S", mala: 0, preco: 235000, categoria: "SUV" },
+			{ nome: "I-WAGEN", mala: 0, preco: 400000, categoria: "SUV" },
+			{ nome: "LANDSTALKER XL", mala: 0, preco: 250000, categoria: "SUV" },
+			{ nome: "MESA", mala: 0, preco: 300000, categoria: "SUV" },
+			{ nome: "NOVAK", mala: 0, preco: 600000, categoria: "SUV" },
+			{ nome: "PATRIOT", mala: 300, preco: 530000, categoria: "SUV" },
+			{ nome: "PATRIOT STRETCH RADIUS", mala: 0, preco: 500000, categoria: "SUV" },
+			{ nome: "RADIUS", mala: 0, preco: 350000, categoria: "SUV" },
+			{ nome: "REBLA GTS", mala: 200, preco: 6000000, categoria: "SUV" },
+			{ nome: "ROCOTO", mala: 0, preco: 2200000, categoria: "SUV" },
+			{ nome: "TOROS", mala: 0, preco: 7500000, categoria: "SUV" },
+			{ nome: "CAADEESV", mala: 0, preco: 1500000, categoria: "SUV" },
+			
+		// === SPORTCLASSICS ===
+			{ nome: "190Z", mala: 0, preco: 250000, categoria: "SportClassics" },
+			{ nome: "CASCO", mala: 0, preco: 275000, categoria: "SportClassics" },
+			{ nome: "CHEBUREK", mala: 0, preco: 100000, categoria: "SportClassics" },
+			{ nome: "CHEETAH CLASSIC", mala: 0, preco: 2300000, categoria: "SportClassics" },
+			{ nome: "COQUETTE CLASSIC", mala: 0, preco: 220000, categoria: "SportClassics" },
+			{ nome: "COQUETTE D1", mala: 0, preco: 145000, categoria: "SportClassics" },
+			{ nome: "DYNASTY", mala: 0, preco: 80000, categoria: "SportClassics" },
+			{ nome: "FAGALOA", mala: 0, preco: 75000, categoria: "SportClassics" },
+			{ nome: "FRANKEN STANGE", mala: 0, preco: 120000, categoria: "SportClassics" },
+			{ nome: "GT500", mala: 0, preco: 220000, categoria: "SportClassics" },
+			{ nome: "INFERNUS CLASSIC", mala: 0, preco: 4500000, categoria: "SportClassics" },
+			{ nome: "JB 700", mala: 0, preco: 200000, categoria: "SportClassics" },
+			{ nome: "MAMBA", mala: 0, preco: 180000, categoria: "SportClassics" },
+			{ nome: "MANANA", mala: 0, preco: 100000, categoria: "SportClassics" },
+			{ nome: "MICHELLI GT", mala: 0, preco: 150000, categoria: "SportClassics" },
+			{ nome: "ROOSEVELT VALOR", mala: 0, preco: 140000, categoria: "SportClassics" },
+			{ nome: "STINGER", mala: 0, preco: 850000, categoria: "SportClassics" },
+			{ nome: "STINGER GT", mala: 0, preco: 750000, categoria: "SportClassics" },
+			{ nome: "STIRLING GT", mala: 0, preco: 800000, categoria: "SportClassics" },
+			{ nome: "SWINGER", mala: 0, preco: 700000, categoria: "SportClassics" },
+			{ nome: "TORERO", mala: 0, preco: 2500000, categoria: "SportClassics" },
+			{ nome: "CONVERTIBLE TORNADO", mala: 0, preco: 100000, categoria: "SportClassics" },
+			{ nome: "TORNADO CUSTOM", mala: 0, preco: 2000000, categoria: "SportClassics" },
+			{ nome: "ZION CLASSIC", mala: 0, preco: 135000, categoria: "SportClassics" },
+			{ nome: "AURORAS", mala: 0, preco: 6000000, categoria: "SportClassics" },
+			{ nome: "DEIMOS", mala: 0, preco: 3500000, categoria: "SportClassics" },			
+			
+		// === COUPE ===
+			{ nome: "COGNOSCENTI CABRIO", mala: 0, preco: 200000, categoria: "Coupe" },
+			{ nome: "EUROS X32", mala: 0, preco: 230000, categoria: "Coupe" },
+			{ nome: "EXEMPLAR", mala: 0, preco: 3000000, categoria: "Coupe" },
+			{ nome: "F620", mala: 0, preco: 5000000, categoria: "Coupe" },
+			{ nome: "FELON", mala: 0, preco: 320000, categoria: "Coupe" },
+			{ nome: "FELON GT5", mala: 75, preco: 300000, categoria: "Coupe" },
+			{ nome: "FR36", mala: 0, preco: 250000, categoria: "Coupe" },
+			{ nome: "JACKAL", mala: 0, preco: 600000, categoria: "Coupe" },
+			{ nome: "KANJO SJ", mala: 0, preco: 210000, categoria: "Coupe" },
+			{ nome: "ORACLE", mala: 0, preco: 250000, categoria: "Coupe" },
+			{ nome: "POSTLUDE", mala: 0, preco: 120000, categoria: "Coupe" },
+			{ nome: "PREVION", mala: 0, preco: 175000, categoria: "Coupe" },
+			{ nome: "SENTINEL", mala: 0, preco: 275000, categoria: "Coupe" },
+			{ nome: "WINDSOR", mala: 0, preco: 250000, categoria: "Coupe" },
+			{ nome: "ZION CABRIO", mala: 0, preco: 200000, categoria: "Coupe" },
+			{ nome: "ORLYXON", mala: 0, preco: 300000, categoria: "Coupe" },
+			{ nome: "ULMERYX", mala: 0, preco: 2500000, categoria: "Coupe" },
+			{ nome: "VORNYXIS", mala: 0, preco: 2500000, categoria: "Coupe" },
+			{ nome: "WRYNTOR", mala: 0, preco: 12000000, categoria: "Coupe" },
+			{ nome: "YVRANTIS", mala: 0, preco: 300000, categoria: "Coupe" },
+			{ nome: "ZYNTHERA", mala: 0, preco: 350000, categoria: "Coupe" },
+			{ nome: "CRYNTHAR", mala: 0, preco: 250000, categoria: "Coupe" },
+			{ nome: "BRZRBV3", mala: 0, preco: 5000000, categoria: "Coupe" },
+			{ nome: "CUPHERX9", mala: 0, preco: 3750000, categoria: "Coupe" },
+
+		// === MOTORCYCLE ===
+			{ nome: "AKUMA", mala: 0, preco: 3200000, categoria: "Motorcycle" },
+			{ nome: "AVARUS", mala: 0, preco: 200000, categoria: "Motorcycle" },
+			{ nome: "BAGGER", mala: 0, preco: 185000, categoria: "Motorcycle" },
+			{ nome: "BATI 801", mala: 0, preco: 4000000, categoria: "Motorcycle" },
+			{ nome: "BATI 801RR", mala: 0, preco: 3700000, categoria: "Motorcycle" },
+			{ nome: "BF 400", mala: 0, preco: 180000, categoria: "Motorcycle" },
+			{ nome: "CARBON RS", mala: 0, preco: 190000, categoria: "Motorcycle" },
+			{ nome: "CLIFFHANGER", mala: 0, preco: 220000, categoria: "Motorcycle" },
+			{ nome: "REGULAR DAEMON", mala: 0, preco: 320000, categoria: "Motorcycle" },
+			{ nome: "DEFILER", mala: 0, preco: 300000, categoria: "Motorcycle" },
+			{ nome: "DIABLOUS", mala: 0, preco: 3600000, categoria: "Motorcycle" },
+			{ nome: "DIABLOUS CUSTOM", mala: 0, preco: 1700000, categoria: "Motorcycle" },
+			{ nome: "DOUBLE T", mala: 0, preco: 2500000, categoria: "Motorcycle" },
+			{ nome: "ENDURO", mala: 0, preco: 150000, categoria: "Motorcycle" },
+			{ nome: "ESSKEY", mala: 0, preco: 190000, categoria: "Motorcycle" },
+			{ nome: "FAGGIO", mala: 0, preco: 140000, categoria: "Motorcycle" },
+			{ nome: "FAGGIO MOD", mala: 0, preco: 100000, categoria: "Motorcycle" },
+			{ nome: "FAGGIO SPORT", mala: 0, preco: 130000, categoria: "Motorcycle" },
+			{ nome: "FCR 1000", mala: 0, preco: 210000, categoria: "Motorcycle" },
+			{ nome: "FCR 100 CUSTOM", mala: 0, preco: 220000, categoria: "Motorcycle" },
+			{ nome: "GARGOYLE", mala: 0, preco: 200000, categoria: "Motorcycle" },
+			{ nome: "HAKYCHOU", mala: 0, preco: 3200000, categoria: "Motorcycle" },
+			{ nome: "HAKYCHOU DRAG", mala: 0, preco: 3500000, categoria: "Motorcycle" },
+			{ nome: "HEXER", mala: 0, preco: 190000, categoria: "Motorcycle" },
+			{ nome: "INNOVATION", mala: 0, preco: 900000, categoria: "Motorcycle" },
+			{ nome: "LECTRO", mala: 0, preco: 170000, categoria: "Motorcycle" },
+			{ nome: "MANCHEZ", mala: 0, preco: 185000, categoria: "Motorcycle" },
+			{ nome: "MANCHEZ SCOUT", mala: 0, preco: 180000, categoria: "Motorcycle" },
+			{ nome: "MANCHEZ SCOUT C", mala: 0, preco: 130000, categoria: "Motorcycle" },
+			{ nome: "NEMESIS", mala: 0, preco: 230000, categoria: "Motorcycle" },
+			{ nome: "NIGHTBLADE", mala: 0, preco: 200000, categoria: "Motorcycle" },
+			{ nome: "PCJ 600", mala: 0, preco: 130000, categoria: "Motorcycle" },
+			{ nome: "POWERSURGE", mala: 0, preco: 1500000, categoria: "Motorcycle" },
+			{ nome: "RAT BIKE", mala: 0, preco: 140000, categoria: "Motorcycle" },
+			{ nome: "REEVER", mala: 0, preco: 300000, categoria: "Motorcycle" },
+			{ nome: "RUFFIAN", mala: 0, preco: 330000, categoria: "Motorcycle" },
+			{ nome: "SANCHEZ", mala: 0, preco: 150000, categoria: "Motorcycle" },
+			{ nome: "SANCHEZ LIVERY", mala: 0, preco: 140000, categoria: "Motorcycle" },
+			{ nome: "SANCTUS", mala: 0, preco: 200000, categoria: "Motorcycle" },
+			{ nome: "SHINOBI", mala: 0, preco: 640000, categoria: "Motorcycle" },
+			{ nome: "STRYDER", mala: 0, preco: 170000, categoria: "Motorcycle" },
+			{ nome: "THRUST", mala: 0, preco: 170000, categoria: "Motorcycle" },
+			{ nome: "VADER", mala: 0, preco: 150000, categoria: "Motorcycle" },
+			{ nome: "VINDICATOR", mala: 0, preco: 190000, categoria: "Motorcycle" },
+			{ nome: "VORTEX", mala: 0, preco: 200000, categoria: "Motorcycle" },
+			{ nome: "WOLFSBANE", mala: 0, preco: 230000, categoria: "Motorcycle" },
+			{ nome: "ZOMBIE BOBBER", mala: 0, preco: 240000, categoria: "Motorcycle" },
+			{ nome: "ZOMBIE CHOPPER", mala: 0, preco: 250000, categoria: "Motorcycle" },
+			{ nome: "VAYTHAR", mala: 0, preco: 300000, categoria: "Motorcycle" },
+			{ nome: "LORYNTH", mala: 0, preco: 2000000, categoria: "Motorcycle" },
+			{ nome: "MYVAROS", mala: 0, preco: 5000000, categoria: "Motorcycle" },
+			{ nome: "AXORION", mala: 0, preco: 5000000, categoria: "Motorcycle" },	
+			{ nome: "SHINOBIR", mala: 0, preco: 14000000, categoria: "Motorcycle" },			
+
+		// === TROLL ===
+			{ nome: "GO GO MONKEY", mala: 0, preco: 100000, categoria: "Troll" },
+			{ nome: "RAPTOR", mala: 0, preco: 500000, categoria: "Troll" },
+			{ nome: "FUTURE SHOCK SLAMVAN", mala: 0, preco: 6000000, categoria: "Troll" },
+			{ nome: "LURCHER", mala: 0, preco: 1000000, categoria: "Troll" },
+			{ nome: "CLOWN VAN", mala: 0, preco: 1500000, categoria: "Troll" },
+			{ nome: "JORVEX", mala: 0, preco: 5000000, categoria: "Troll" },
+
+		// === VIP ===
+			{ nome: "TEMPESTA", mala: 0, preco: 65, categoria: "VIP" },
+			{ nome: "TENF", mala: 0, preco: 75, categoria: "VIP" },
+			{ nome: "TAILGATERWB", mala: 100, preco: 25, categoria: "VIP" },
+			{ nome: "SAVANNA", mala: 0, preco: 25, categoria: "VIP" },
+			{ nome: "RHINEHARTJC", mala: 0, preco: 30, categoria: "VIP" },
+			{ nome: "RH82", mala: 0, preco: 35, categoria: "VIP" },
+			{ nome: "REBLAX6", mala: 0, preco: 50, categoria: "VIP" },
+			{ nome: "T20GTR", mala: 0, preco: 65, categoria: "VIP" },
+			{ nome: "POLYSPEED 4", mala: 0, preco: 25, categoria: "VIP" },
+			{ nome: "POLYCHYPHERWAGON", mala: 0, preco: 25, categoria: "VIP" },
+			{ nome: "PARIAHGT3", mala: 0, preco: 40, categoria: "VIP" },
+			{ nome: "ORACLE2HYC", mala: 0, preco: 25, categoria: "VIP" },
+			{ nome: "NEONCS", mala: 0, preco: 75, categoria: "VIP" },
+			{ nome: "JUBILEEMANS", mala: 0, preco: 30, categoria: "VIP" },
+			{ nome: "JESTERNIGHTMARE", mala: 0, preco: 25, categoria: "VIP" },
+			{ nome: "HYCRH7", mala: 0, preco: 30, categoria: "VIP" },
+			{ nome: "ITALIGTOC", mala: 0, preco: 50, categoria: "VIP" },
+			{ nome: "ELEGYRH7", mala: 0, preco: 20, categoria: "VIP" },
+			{ nome: "CYPHERAVANTE", mala: 0, preco: 40, categoria: "VIP" },
+			{ nome: "CELESTE", mala: 0, preco: 30, categoria: "VIP" },
+			{ nome: "CARACARAN", mala: 0, preco: 50, categoria: "VIP" },
+			{ nome: "BALLERDEF", mala: 0, preco: 50, categoria: "VIP" },
+			{ nome: "ADDERS", mala: 0, preco: 75, categoria: "VIP" },
+			{ nome: "GBPROSPERO", mala: 0, preco: 70, categoria: "VIP" },
+			{ nome: "MULE", mala: 3000, preco: 25, categoria: "VIP" },
+			{ nome: "BENSON", mala: 6500, preco: 50, categoria: "VIP" },
+			{ nome: "MOCHILA JATO", mala: 0, preco: 100, categoria: "VIP" },
+			{ nome: "SCARAB", mala: 0, preco: 100, categoria: "VIP" },
+			{ nome: "VETIR", mala: 7000, preco: 50, categoria: "VIP" },
+			{ nome: "NMULE", mala: 7000, preco: 60, categoria: "VIP" },	
+			{ nome: "GT3RS", mala: 0, preco: 50, categoria: "VIP" },		
+			{ nome: "R1000", mala: 0, preco: 60, categoria: "VIP" },	
+			{ nome: "TURISMOS", mala: 0, preco: 35, categoria: "VIP" },	
+			{ nome: "SCHAGENSTR", mala: 0, preco: 50, categoria: "VIP" },				
+
+
+    ];
+
+    function euro(v){
+      return v.toLocaleString("pt-PT",{ style:"currency", currency:"EUR" });
+    }
+
+    const nav       = document.getElementById("categoriasNav");
+    const container = document.getElementById("listaCategorias");
+
+    // Meta por categoria: ícone e nome bonitinho (se quiseres)
+    const categoryMeta = {
+      "Sports":        { icon:"🏎",  label:"Sports" },
+      "Compacts":      { icon:"🚗",  label:"Compacts" },
+      "Trabalho":      { icon:"🚚",  label:"Trabalho" },
+      "Muscle":        { icon:"💪",  label:"Muscle" },
+      "Off-Road":      { icon:"🏔️", label:"Off-Road" },
+      "SUV":           { icon:"🚙",  label:"SUV" },
+      "SportClassics": { icon:"🕰️", label:"SportClassics" },
+      "Coupe":         { icon:"🚘",  label:"Coupe" },
+      "Motorcycle":    { icon:"🏍️", label:"Motorcycle" },
+      "Troll":         { icon:"🤡",  label:"Troll" },
+      "VIP":           { icon:"👑",  label:"VIP" },
+    };
+
+    // Ordem fixa dos botões
+    const ordemCategorias = [
+      "Sports",
+      "Compacts",
+      "Trabalho",
+      "Muscle",
+      "Off-Road",
+      "SUV",
+      "SportClassics",
+      "Coupe",
+      "Motorcycle",
+      "Troll",
+      "VIP"
+    ];
+
+   // Agrupar por categoria
+  const categoriasMap = {};
+  carros.forEach(c => {
+    if(!categoriasMap[c.categoria]) categoriasMap[c.categoria] = [];
+    categoriasMap[c.categoria].push(c);
+  });
+
+  // Mantém só as categorias que existem nos dados
+  const nomesCategoriasOrdenados = ordemCategorias.filter(c => categoriasMap[c]);
+
+  // Filtros
+  const filtrosCategoria = {};  // filtro local de cada categoria
+  let termoGlobal = "";         // filtro da barra geral
+
+  // Criar blocos por categoria (com pesquisa local)
+  nomesCategoriasOrdenados.forEach(cat => {
+    const lista = categoriasMap[cat];
+
+    const bloco = document.createElement("article");
+    bloco.className = "categoria-bloco";
+    const anchorId = "cat-" + cat.replace(/\s+/g,"-");
+    bloco.id = anchorId;
+
+    const header = document.createElement("div");
+    header.className = "categoria-titulo";
+    header.innerHTML = `
+      <div>${cat}</div>
+      <span>${lista.length} veículo${lista.length === 1 ? "" : "s"}</span>
+    `;
+
+    // 🔎 Barra de pesquisa específica desta categoria
+    const searchDiv = document.createElement("div");
+    searchDiv.className = "categoria-pesquisa";
+    searchDiv.innerHTML = `
+      <input type="text" class="input-cat-pesquisa" placeholder="Filtrar esta categoria..." autocomplete="off" />
+    `;
+
+    const tabela = document.createElement("table");
+    tabela.className = "tabela-carros";
+    tabela.innerHTML = `
+      <thead>
+        <tr>
+          <th class="col-modelo">Modelo</th>
+          <th class="col-preco">Preço</th>
+          <th class="col-mala">Mala (Kg)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    `;
+    const tbody = tabela.querySelector("tbody");
+
+    lista.forEach(carro => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="col-modelo">${carro.nome}</td>
+        <td class="col-preco">${euro(carro.preco)}</td>
+        <td class="col-mala">${(carro.mala || 0)} Kg</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    bloco.appendChild(header);
+    bloco.appendChild(searchDiv);  // pesquisa da categoria
+    bloco.appendChild(tabela);
+    container.appendChild(bloco);
+
+    // inicia filtro da categoria
+    filtrosCategoria[cat] = "";
+
+    const localInput = searchDiv.querySelector("input");
+    localInput.addEventListener("input", () => {
+      filtrosCategoria[cat] = localInput.value.trim().toLowerCase();
+      aplicarFiltros();
+    });
+  });
+
+  // Destacar categoria ativa
+  function setCategoriaAtiva(anchorId, buttonClicado){
+    document.querySelectorAll(".categoria-bloco").forEach(b => {
+      b.classList.remove("ativo");
+    });
+    document.querySelectorAll(".categorias-nav button").forEach(btn => {
+      btn.classList.remove("active");
+    });
+
+    const blocoAlvo = document.getElementById(anchorId);
+    if(blocoAlvo){
+      blocoAlvo.classList.add("ativo");
+    }
+
+    if(buttonClicado){
+      buttonClicado.classList.add("active");
+    }
+  }
+
+  // Criar botões de navegação (com ícone + contador)
+  nomesCategoriasOrdenados.forEach(cat => {
+    const btn = document.createElement("button");
+    const anchorId = "cat-" + cat.replace(/\s+/g,"-");
+    const meta = categoryMeta[cat] || { icon:"", label:cat };
+    const count = categoriasMap[cat].length;
+
+    btn.dataset.target = anchorId;
+    btn.classList.add(`cat-${cat.replace(/\s+/g,"-")}`);
+
+    btn.innerHTML = `
+      <span class="icon">${meta.icon || ""}</span>
+      <span class="label">${meta.label}</span>
+      <span class="count">(${count})</span>
+    `;
+
+    btn.addEventListener("click", () => {
+      const target = document.getElementById(anchorId);
+      if(target){
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      setCategoriaAtiva(anchorId, btn);
+    });
+
+    nav.appendChild(btn);
+  });
+
+  // 🔄 função comum que aplica:
+  // - filtro global (barra de cima)
+  // - filtro local (barra de cada categoria)
+  function aplicarFiltros(){
+    let primeiroAnchorComResultado = null;
+
+    nomesCategoriasOrdenados.forEach(cat => {
+      const anchorId = "cat-" + cat.replace(/\s+/g,"-");
+      const bloco = document.getElementById(anchorId);
+      if(!bloco) return;
+
+      const linhas = bloco.querySelectorAll("tbody tr");
+      const termoLocal = (filtrosCategoria[cat] || "").trim().toLowerCase();
+      let temAlgumVisivel = false;
+
+      linhas.forEach(tr => {
+        const modelo = tr.querySelector(".col-modelo").textContent.toLowerCase();
+        const matchGlobal = !termoGlobal || modelo.includes(termoGlobal);
+        const matchLocal  = !termoLocal  || modelo.includes(termoLocal);
+        const mostra = matchGlobal && matchLocal;
+        tr.style.display = mostra ? "" : "none";
+        if(mostra) temAlgumVisivel = true;
+      });
+
+      bloco.style.display = temAlgumVisivel ? "" : "none";
+
+      if(temAlgumVisivel && !primeiroAnchorComResultado && (termoGlobal || termoLocal)){
+        primeiroAnchorComResultado = anchorId;
+      }
+    });
+
+    if(primeiroAnchorComResultado){
+      const btn = document.querySelector(`.categorias-nav button[data-target="${primeiroAnchorComResultado}"]`);
+      setCategoriaAtiva(primeiroAnchorComResultado, btn);
+    }
+  }
+
+  // 🔎 PESQUISA GLOBAL (barra de cima)
+  const inputPesquisa = document.getElementById("pesquisaCarro");
+  inputPesquisa.addEventListener("input", () => {
+    termoGlobal = inputPesquisa.value.trim().toLowerCase();
+    aplicarFiltros();
+  });
+
+</script>
+</body>
+</html>
